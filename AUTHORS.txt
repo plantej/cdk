@@ -52,11 +52,13 @@ Jonty Lawson
 Kevin Lawson
 Daniel Leidert
 Katrin Leinweber
+Qinqing Liu
 Edgar Luttmann
 Todd Martin
 John Mayfield
 Nathanaël Mazuir
 Stephan Michels
+Martin Morissette
 Hirotomo Moriwaki
 Scooter Morris
 Peter Murray-Rust
@@ -69,6 +71,7 @@ Niels Out
 Jerome Pansanel
 Diego Pedrosa
 Julio Peironcely
+Jeffrey Plante
 Tomáš Pluskal
 Chris Pudney
 Syed Asad Rahman

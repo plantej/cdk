@@ -345,7 +345,7 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
             line = input.readLine();
             linecount++;
 
-            // if the line is empty we hav a problem - either a malformed
+            // if the line is empty we have a problem - either a malformed
             // molecule entry or just extra new lines at the end of the file
             if (line.length() == 0) {
                 handleError("Unexpected empty line", linecount, 0, 0);
@@ -1321,13 +1321,13 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
             return atom;
         }
         if (symbol.equals("D") && interpretHydrogenIsotopes.isSet()) {
-            if (mode == Mode.STRICT) throw new CDKException("invalid symbol: " + symbol);
+            handleError("invalid symbol: " + symbol, lineNum, 31, 33);
             IAtom atom = builder.newInstance(IAtom.class, "H");
             atom.setMassNumber(2);
             return atom;
         }
         if (symbol.equals("T") && interpretHydrogenIsotopes.isSet()) {
-            if (mode == Mode.STRICT) throw new CDKException("invalid symbol: " + symbol);
+            handleError("invalid symbol: " + symbol, lineNum, 31, 33);
             IAtom atom = builder.newInstance(IAtom.class, "H");
             atom.setMassNumber(3);
             return atom;
@@ -1519,6 +1519,8 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
             default:
                 return 0;
         }
+        if (index+1 == line.length())
+            return sign * result;
         switch ((c = line.charAt(index + 1))) {
             case ' ':
                 if (result > 0) return sign * result;
@@ -1542,13 +1544,11 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
             default:
                 return sign * result;
         }
+        if (index+2 == line.length())
+            return sign * result;
         switch ((c = line.charAt(index + 2))) {
             case ' ':
                 if (result > 0) return sign * result;
-                break;
-            case '-':
-                if (result > 0) return sign * result;
-                sign = -1;
                 break;
             case '0':
             case '1':
@@ -1585,7 +1585,7 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
             pseudoAtom.setLabel(label);
         } else {
             pseudoAtom.setSymbol(label);
-            pseudoAtom.setAtomicNumber(0);
+            pseudoAtom.setAtomicNumber(atom.getAtomicNumber());
             pseudoAtom.setPoint2d(atom.getPoint2d());
             pseudoAtom.setPoint3d(atom.getPoint3d());
             pseudoAtom.setMassNumber(atom.getMassNumber());
@@ -1922,6 +1922,7 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
                 }
 
                 IAtom newPseudoAtom = container.getBuilder().newInstance(IPseudoAtom.class, alias);
+                newPseudoAtom.setAtomicNumber(aliasAtom.getAtomicNumber());
                 if (aliasAtom.getPoint2d() != null) newPseudoAtom.setPoint2d(aliasAtom.getPoint2d());
                 if (aliasAtom.getPoint3d() != null) newPseudoAtom.setPoint3d(aliasAtom.getPoint3d());
                 AtomContainerManipulator.replaceAtomByAtom(container, aliasAtom, newPseudoAtom);

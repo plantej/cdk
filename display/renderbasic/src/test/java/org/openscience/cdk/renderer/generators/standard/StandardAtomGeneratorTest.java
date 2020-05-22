@@ -39,7 +39,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -159,7 +159,7 @@ public class StandardAtomGeneratorTest {
         Rectangle2D chargeBounds = positioned.getBounds();
 
         assertThat(chargeBounds.getMinX(), greaterThan(elementBounds.getMinX()));
-        assertThat(chargeBounds.getCenterY(), closeTo(elementBounds.getMinY(), 0.01));
+        assertThat(chargeBounds.getCenterY(), closeTo(localHydrogen.getBounds().getMinY(), 0.01));
     }
 
     @Test
@@ -186,8 +186,9 @@ public class StandardAtomGeneratorTest {
         Rectangle2D hydrogenBounds = localHydrogen.getBounds();
         Rectangle2D chargeBounds = positioned.getBounds();
 
-        assertThat(chargeBounds.getMinX(), greaterThan(hydrogenBounds.getMinX()));
-        assertThat(chargeBounds.getCenterY(), closeTo(hydrogenBounds.getMinY(), 0.01));
+        Rectangle2D elementBounds = element.getBounds();
+        assertThat(chargeBounds.getMinX(), greaterThan(elementBounds.getMinX()));
+        assertThat(chargeBounds.getCenterY(), closeTo(elementBounds.getMinY(), 0.01));
     }
 
     @Test

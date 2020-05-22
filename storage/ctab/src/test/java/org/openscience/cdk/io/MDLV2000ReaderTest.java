@@ -24,6 +24,7 @@
  *  */
 package org.openscience.cdk.io;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,6 +41,8 @@ import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
 import org.openscience.cdk.interfaces.IChemFile;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
@@ -51,6 +54,7 @@ import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupBracket;
 import org.openscience.cdk.sgroup.SgroupKey;
 import org.openscience.cdk.sgroup.SgroupType;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
@@ -71,6 +75,7 @@ import java.util.Set;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -823,8 +828,8 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         Assert.assertNotNull(mol);
         Assert.assertEquals(2, mol.getAtom(0).getValency().intValue());
         Assert.assertEquals(3, mol.getAtom(1).getValency().intValue());
-        Assert.assertThat(mol.getAtom(2).getValency(), is(not(0)));
-        Assert.assertThat(mol.getAtom(2).getValency(), is(4));
+        org.hamcrest.MatcherAssert.assertThat(mol.getAtom(2).getValency(), is(not(0)));
+        org.hamcrest.MatcherAssert.assertThat(mol.getAtom(2).getValency(), is(4));
         Assert.assertEquals(0, mol.getAtom(3).getValency().intValue());
     }
 
@@ -1008,7 +1013,9 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         reader.read(molecule);
         reader.close();
-        Assert.assertEquals("R", molecule.getAtom(55).getSymbol());
+        IAtom atom = molecule.getAtom(55);
+        org.hamcrest.MatcherAssert.assertThat(atom, CoreMatchers.<IAtom>instanceOf(IPseudoAtom.class));
+        Assert.assertEquals("R", ((IPseudoAtom)atom).getLabel());
     }
 
     @Test
@@ -1364,6 +1371,17 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         assertThat(((IPseudoAtom) container.getAtom(6)).getLabel(), is("R6"));
         assertThat(container.getAtom(7), is(instanceOf(IPseudoAtom.class)));
         assertThat(((IPseudoAtom) container.getAtom(7)).getLabel(), is("Protein"));
+    }
+
+    @Test
+    public void keepAtomicNumberOfAlias() throws Exception {
+        InputStream in = getClass().getResourceAsStream("/data/mdl/element-with-alias.mol");
+        MDLV2000Reader reader = new MDLV2000Reader(in);
+        IAtomContainer container = reader.read(new AtomContainer());
+        reader.close();
+        assertThat(container.getAtom(6), is(instanceOf(IPseudoAtom.class)));
+        assertThat(((IPseudoAtom) container.getAtom(6)).getLabel(), is("N1"));
+        assertThat(((IPseudoAtom) container.getAtom(6)).getAtomicNumber(), is(7));
     }
 
     @Test
@@ -1789,5 +1807,24 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         mdlv2000Reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
         final org.openscience.cdk.silent.AtomContainer atomContainer = mdlv2000Reader.read(new org.openscience.cdk.silent.AtomContainer());
         Assert.assertEquals(17, atomContainer.getAtomCount());
+    }
+
+    @Test public void test() throws Exception {
+        String input = "\n" +
+                       "Structure query\n" +
+                       "\n" +
+                       "  1  0  0  0  0  0  0  0  0  0999 V2000\n" +
+                       " 2430.7100 2427.0000    0.0000 C   0  0  0  0  0  0\n" +
+                       "A   1\n" +
+                       "Blah\n" +
+                       "M  END";
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        try (MDLV2000Reader mdlr = new MDLV2000Reader(new StringReader(input))) {
+            IAtomContainer mol = mdlr.read(bldr.newAtomContainer());
+            assertThat(mol.getAtom(0),
+                       instanceOf(IPseudoAtom.class));
+            assertThat(((IPseudoAtom)mol.getAtom(0)).getLabel(),
+                       is("Blah"));
+        }
     }
 }
